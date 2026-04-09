@@ -110,6 +110,15 @@ fi
 UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
 PATCH_PASSWALL_GLOBAL_LUA
 
+# OpenWrt 25.12 下 shadowsocksr-libev 的上游归档内容已变化，旧 MIRROR_HASH 失效。
+# 先禁用 SSR 组件，避免 passwall 选择该包导致下载阶段直接失败。
+PASSWALL_MAKEFILE="./luci-app-passwall/Makefile"
+if [ -f "$PASSWALL_MAKEFILE" ]; then
+	echo "Patching PassWall defaults to disable broken ShadowsocksR components..."
+	sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Client/,/default y/s/default y/default n/' "$PASSWALL_MAKEFILE"
+	sed -i '/config PACKAGE_$(PKG_NAME)_INCLUDE_ShadowsocksR_Libev_Server/,/default n/s/default n/default n/' "$PASSWALL_MAKEFILE"
+fi
+
 # PassWall 依赖包
 echo " "
 echo "=========================================="
